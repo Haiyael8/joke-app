@@ -193,10 +193,10 @@
         body: JSON.stringify({ topic }),
       });
       const data = await response.json();
-      if (!response.ok || !data.joke) throw new Error(data.error || 'שגיאה');
+      if (!response.ok || !data.joke) throw new Error(data.error || '');
       setState('joke', data.joke, 'עוד בדיחה!', false);
     } catch (err) {
-      setState('error', 'משהו השתבש. נסו שוב בעוד רגע.', 'לנסות שוב', false);
+      setState('error', /[֐-׿]/.test(err.message) ? err.message : 'משהו השתבש. נסו שוב בעוד רגע.', 'לנסות שוב', false);
     }
   });
 </script>
