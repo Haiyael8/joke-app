@@ -1,3 +1,5 @@
+import { getSupabase } from '../lib/supabase.js';
+
 const INSTRUCTIONS =
   'אתה כותב בדיחות קצרות בעברית. כתוב בדיחה אחת בלבד, עד ארבעה משפטים, נקייה ומתאימה לכל גיל. בלי הקדמה, בלי הסבר ובלי אימוג׳י. רק הבדיחה.';
 
@@ -87,7 +89,19 @@ export default {
         console.error(`OpenAI returned no text, status: ${data.status}`);
         return Response.json({ error: MSG_GENERIC }, { status: 502 });
       }
-      return Response.json({ joke });
+      let id;
+      try {
+        const { data: row, error } = await getSupabase()
+          .from('jokes')
+          .insert({ topic: topic || null, text: joke })
+          .select('id')
+          .single();
+        if (error) throw error;
+        id = row.id;
+      } catch (saveErr) {
+        console.error('Saving joke failed:', saveErr);
+      }
+      return Response.json(id ? { joke, id } : { joke });
     } catch (err) {
       console.error('Request to OpenAI failed:', err);
       return Response.json({ error: MSG_GENERIC }, { status: 500 });

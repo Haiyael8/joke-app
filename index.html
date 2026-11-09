@@ -128,6 +128,32 @@
     color: var(--ink);
   }
   .bubble[data-state="error"] #text { color: var(--error); font-weight: 600; }
+  .laugh-row { display: flex; justify-content: center; }
+  .laugh-row[hidden] { display: none; }
+  button.laugh {
+    width: auto;
+    min-height: 52px;
+    padding: 0 26px;
+    font-size: 20px;
+    color: var(--ink);
+    background: var(--blue);
+    box-shadow: 0 6px 0 var(--ink);
+    transform: rotate(1deg);
+    margin-bottom: 6px;
+  }
+  button.laugh:active, button.laugh:disabled { transform: translateY(4px) rotate(1deg); box-shadow: 0 2px 0 var(--ink); }
+  .top h2 { margin: 0 0 8px; font-size: 20px; text-align: center; }
+  .top ol { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .top li {
+    background: var(--paper);
+    border: 3px solid var(--ink);
+    border-radius: 18px;
+    box-shadow: 3px 3px 0 var(--ink);
+    padding: 10px 14px;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  .top .count { display: block; margin-top: 4px; font-weight: 600; color: var(--ink-soft); font-size: 14px; }
   footer {
     margin-top: 6px;
     text-align: center;
@@ -160,6 +186,15 @@
     <p id="text">לוחצים על הכפתור, והבדיחה מופיעה כאן</p>
   </section>
 
+  <div class="laugh-row" id="laughRow" hidden>
+    <button class="laugh" id="laugh" type="button">צחקתי <span id="laughCount">0</span></button>
+  </div>
+
+  <section class="top" id="top" hidden>
+    <h2>הכי מצחיקות</h2>
+    <ol id="topList"></ol>
+  </section>
+
   <footer>מיישם AI ואוטומציה · 53500</footer>
 </main>
 
@@ -178,6 +213,49 @@
     error: 'assets/mascot-error.svg',
   };
 
+  const laughRow = document.getElementById('laughRow');
+  const laughBtn = document.getElementById('laugh');
+  const laughCount = document.getElementById('laughCount');
+  const topSection = document.getElementById('top');
+  const topList = document.getElementById('topList');
+  let currentId = null;
+
+  async function loadTop() {
+    try {
+      const res = await fetch('/api/top');
+      const data = await res.json();
+      if (!res.ok || !Array.isArray(data.jokes)) return;
+      topList.replaceChildren(...data.jokes.map((j) => {
+        const li = document.createElement('li');
+        li.textContent = j.text;
+        const count = document.createElement('span');
+        count.className = 'count';
+        count.textContent = `צחקו: ${j.laughs}`;
+        li.append(count);
+        return li;
+      }));
+      topSection.hidden = data.jokes.length === 0;
+    } catch {}
+  }
+
+  laughBtn.addEventListener('click', async () => {
+    if (!currentId) return;
+    laughBtn.disabled = true;
+    try {
+      const res = await fetch('/api/laugh', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: currentId }),
+      });
+      const data = await res.json();
+      if (!res.ok || typeof data.laughs !== 'number') throw new Error();
+      laughCount.textContent = data.laughs;
+      loadTop();
+    } catch {
+      laughBtn.disabled = false;
+    }
+  });
+
   function setState(state, message, buttonLabel, disabled) {
     bubble.dataset.state = state;
     mascot.src = images[state];
@@ -190,9 +268,13 @@
     window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
   }
 
+  loadTop();
+
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     const topic = topicInput.value.trim();
+    currentId = null;
+    laughRow.hidden = true;
     setState('think', topic ? `מחפש בדיחה על ${topic}...` : 'מחפש בדיחה...', 'חושב...', true);
     try {
       const response = await fetch('/api/joke', {
@@ -203,6 +285,12 @@
       const data = await response.json();
       if (!response.ok || !data.joke) throw new Error(data.error || '');
       setState('joke', data.joke, 'עוד בדיחה!', false);
+      if (data.id) {
+        currentId = data.id;
+        laughCount.textContent = '0';
+        laughBtn.disabled = false;
+        laughRow.hidden = false;
+      }
     } catch (err) {
       setState('error', /[֐-׿]/.test(err.message) ? err.message : 'משהו השתבש. נסו שוב בעוד רגע.', 'לנסות שוב', false);
     }
