@@ -16,12 +16,21 @@
 - לא לבקש ממני אף מפתח, ולא לכתוב או לקרוא מפתח בשום קובץ.
 - מפתח ה-production שמור ב-Vercel. מפתח ה-dev אני מדביק בעצמי ב-`.env.local`.
 - המפתח הסודי של Supabase (`SUPABASE_SECRET_KEY`) אני שם ב-Vercel בעצמי. לא לבקש אותו, ולא לכתוב או לקרוא אותו בשום קובץ.
+- `SUPABASE_PUBLISHABLE_KEY` (מ-Milestone 5) הוא מסוג Config, בכל הסביבות ב-Vercel. הוא לא סוד, ואת הערך אפשר להביא דרך המחבר של Supabase עם `get_publishable_keys`. הוא לא נכנס ל-`.env.example`.
+- Client Secret של Google (בונוס) נשאר רק בדשבורד של Supabase: לא בקוד, לא בריפו ולא ב-Vercel.
 - `.claude/settings.json` חוסם את הקריאה של `.env` ושל `.env.*`.
 
 ## נתונים
-- Supabase לשמירה. רק הפונקציות בתיקיית `api` מדברות איתו, דרך `lib/supabase.js`. הדף מדבר רק עם `/api`.
-- הטבלה נעולה: RLS בלי policy, והגישה רק ל-`service_role`.
-- ב-Milestone 4 יש שתי נקודות עצירה: אחרי ה-SQL ו-`get_advisors`, ולפני הדחיפה (כשאני שם את המפתח ב-Vercel).
+- Supabase לשמירה. רק הפונקציות בתיקיית `api` ניגשות לטבלאות, דרך `lib/supabase.js`. הדף מדבר רק עם `/api`, ואף פעם לא עם `/rest/v1`.
+- כל טבלה נעולה: RLS בלי policy, `revoke all` מ-`anon` ומ-`authenticated`, והגישה רק ל-`service_role`. כל פונקציה בבסיס הנתונים: `revoke execute` מ-`public`, `anon` ו-`authenticated`, ו-`grant` ל-`service_role`.
+- כל SQL נשמר קודם כקובץ בתיקייה `db`, מוצג לי, ורץ דרך המחבר של Supabase רק אחרי אישור.
+- ב-Milestone 4 יש שתי נקודות עצירה: אחרי ה-SQL ו-`get_advisors`, ולפני הדחיפה (כשאני שם את המפתח ב-Vercel). ב-Milestones 5 ו-6: עצירה אחרי ה-SQL ו-`get_advisors`.
+
+## כניסה והרשאות (מ-Milestone 5)
+- הכניסה ב-Supabase Auth, ברמה 3 לפי `spec/course-stack.md`: משתמשים אמיתיים עם הרשמה עצמית. כניסה עם Google היא בונוס אחרי Milestone 6.
+- הטוקן נשלח בכותרת `Authorization`. הפונקציות מזהות משתמש רק עם `supabase.auth.getUser(token)`. מזהה משתמש או שם שמגיעים מהדף לא נחשבים.
+- הספרייה של Supabase בדפדפן משמשת לכניסה בלבד (`auth.js`). הכתובת והמפתח הציבורי מגיעים מ-`/api/config`.
+- כל טקסט מהשרת או מהמשתמש מוצג עם `textContent`, אף פעם לא `innerHTML`. אין polling: רשימה נטענת כשנכנסים ללשונית ואחרי פעולה.
 
 ## מודל
 - Sonnet להקמה ולכל המיילסטונים. Opus רק אם נתקעים בבאג עקשן.
