@@ -428,15 +428,17 @@
 
   async function submitAuth(event, action) {
     event.preventDefault();
-    const submit = event.currentTarget.querySelector('button[type="submit"]');
+    const formEl = event.currentTarget; // אחרי await, currentTarget כבר null
+    const submit = formEl.querySelector('button[type="submit"]');
     submit.disabled = true;
     showMsg(authMsg, '');
     try {
       await window.Auth.ready();
       await action();
-      event.currentTarget.reset();
+      formEl.reset();
       authDialog.close();
     } catch (err) {
+      if (!err.hebrew) console.error('auth failed:', err);
       showMsg(authMsg, err.hebrew ? err.message : 'הכניסה לא זמינה כרגע. נסו שוב מאוחר יותר.');
     } finally {
       submit.disabled = false;
@@ -468,7 +470,8 @@
   document.getElementById('deleteBtn').addEventListener('click', () => { confirmBox.hidden = false; });
   document.getElementById('cancelDelete').addEventListener('click', () => { confirmBox.hidden = true; });
   document.getElementById('confirmDelete').addEventListener('click', async (e) => {
-    e.currentTarget.disabled = true;
+    const btn = e.currentTarget;
+    btn.disabled = true;
     showMsg(accMsg, '');
     try {
       const res = await api('/api/delete-account', { method: 'POST' });
@@ -480,7 +483,7 @@
       confirmBox.hidden = true;
       showMsg(accMsg, err.signedOut ? err.message : (/[֐-׿]/.test(err.message) ? err.message : 'לא הצלחתי למחוק את החשבון. נסו שוב.'));
     } finally {
-      e.currentTarget.disabled = false;
+      btn.disabled = false;
     }
   });
 
