@@ -160,6 +160,77 @@
     font-size: 13px;
     color: var(--ink-soft);
   }
+  .account-btn, button.small {
+    width: auto;
+    min-height: 44px;
+    padding: 0 18px;
+    font: 600 18px "Fredoka", system-ui, sans-serif;
+    color: var(--ink);
+    background: var(--paper);
+    border: 3px solid var(--ink);
+    border-radius: 999px;
+    box-shadow: 0 4px 0 var(--ink);
+    transform: none;
+    margin: 0;
+    cursor: pointer;
+  }
+  .account-btn:active, button.small:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
+  button.small:disabled { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); opacity: 0.7; }
+  button.small.primary { background: var(--red); color: #fff; }
+  button.small.danger { background: var(--error-bg); color: var(--error); }
+  .account-btn {
+    position: absolute;
+    top: 14px;
+    left: 18px;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 14px 0 8px;
+    max-width: 55vw;
+  }
+  .account-btn:not(.has-user) { padding: 0 18px; }
+  .account-btn .avatar {
+    flex: none;
+    width: 30px; height: 30px;
+    display: grid; place-items: center;
+    border-radius: 50%;
+    background: var(--blue);
+    border: 2px solid var(--ink);
+    font-size: 16px; font-weight: 700;
+  }
+  .account-btn .who { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .byline { margin: 0; text-align: center; font-size: 15px; font-weight: 500; color: var(--ink-soft); }
+  .byline[hidden] { display: none; }
+  dialog {
+    width: min(92vw, 400px);
+    padding: 20px 18px;
+    color: var(--ink);
+    background: var(--paper);
+    border: 3px solid var(--ink);
+    border-radius: 26px;
+    box-shadow: 6px 6px 0 var(--ink);
+    font-family: "Fredoka", system-ui, sans-serif;
+  }
+  dialog::backdrop { background: rgba(43, 30, 74, 0.5); }
+  @media (max-width: 600px) {
+    dialog { margin: auto auto 0; width: 100%; max-width: 100%; border-radius: 26px 26px 0 0; border-bottom: 0; }
+  }
+  dialog h2 { margin: 0 0 12px; font-size: 22px; text-align: center; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+  .tabs button.small { flex: 1; box-shadow: none; }
+  .tabs button.small[aria-selected="true"] { background: var(--ink); color: #fff; }
+  .dlg-form { display: flex; flex-direction: column; gap: 6px; }
+  .dlg-form input { transform: none; box-shadow: 3px 3px 0 var(--ink); font-size: 17px; margin-bottom: 6px; }
+  .dlg-form label { font-size: 16px; }
+  .dlg-form[hidden], .dlg-msg[hidden], .confirm-box[hidden] { display: none; }
+  .dlg-msg { margin: 0 0 10px; text-align: center; font-size: 16px; font-weight: 600; color: var(--error); }
+  .dlg-msg.info { color: var(--ink-soft); }
+  .dlg-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
+  .acc-line { margin: 0 0 8px; text-align: center; font-size: 18px; word-break: break-word; }
+  .acc-mail { color: var(--ink-soft); font-size: 16px; }
+  .confirm-box { margin-top: 12px; padding: 12px; border: 3px solid var(--ink); border-radius: 18px; background: var(--error-bg); text-align: center; }
+  .confirm-box p { margin: 0 0 8px; font-weight: 600; color: var(--error); }
   @keyframes hop { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
   @keyframes squash { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.86); } }
   @keyframes wobble { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-8deg); } 75% { transform: rotate(8deg); } }
@@ -171,6 +242,52 @@
 </head>
 <body>
 <div class="doodles" aria-hidden="true"></div>
+<button type="button" class="account-btn" id="accountBtn">כניסה</button>
+
+<dialog id="authDialog" aria-labelledby="authTitle">
+  <h2 id="authTitle">ברוכים הבאים</h2>
+  <div class="tabs" role="tablist">
+    <button type="button" class="small" role="tab" id="tabSignin" aria-selected="true">כניסה</button>
+    <button type="button" class="small" role="tab" id="tabSignup" aria-selected="false">הרשמה</button>
+  </div>
+  <p class="dlg-msg" id="authMsg" role="alert" hidden></p>
+  <form class="dlg-form" id="signinForm" novalidate>
+    <label for="siEmail">מייל</label>
+    <input id="siEmail" type="email" autocomplete="email" dir="ltr" required>
+    <label for="siPass">סיסמה</label>
+    <input id="siPass" type="password" autocomplete="current-password" dir="ltr" required>
+    <div class="dlg-actions"><button type="submit" class="small primary">כניסה</button><button type="button" class="small" data-close>סגירה</button></div>
+  </form>
+  <form class="dlg-form" id="signupForm" novalidate hidden>
+    <label for="suName">איך לקרוא לך?</label>
+    <input id="suName" type="text" maxlength="30" autocomplete="nickname" required>
+    <label for="suEmail">מייל</label>
+    <input id="suEmail" type="email" autocomplete="email" dir="ltr" required>
+    <label for="suPass">סיסמה (6 תווים לפחות)</label>
+    <input id="suPass" type="password" minlength="6" autocomplete="new-password" dir="ltr" required>
+    <div class="dlg-actions"><button type="submit" class="small primary">הרשמה</button><button type="button" class="small" data-close>סגירה</button></div>
+  </form>
+</dialog>
+
+<dialog id="accountDialog" aria-labelledby="accTitle">
+  <h2 id="accTitle">החשבון שלי</h2>
+  <p class="acc-line" id="accName"></p>
+  <p class="acc-line acc-mail" id="accMail" dir="ltr"></p>
+  <p class="dlg-msg" id="accMsg" role="alert" hidden></p>
+  <div class="dlg-actions">
+    <button type="button" class="small" id="signOutBtn">התנתקות</button>
+    <button type="button" class="small danger" id="deleteBtn">מחיקת החשבון</button>
+    <button type="button" class="small" data-close>סגירה</button>
+  </div>
+  <div class="confirm-box" id="confirmBox" hidden>
+    <p>למחוק את החשבון? אי אפשר לשחזר. הבדיחות שלך יישארו בלי שם.</p>
+    <div class="dlg-actions">
+      <button type="button" class="small danger" id="confirmDelete">כן, למחוק</button>
+      <button type="button" class="small" id="cancelDelete">ביטול</button>
+    </div>
+  </div>
+</dialog>
+
 <main>
   <img class="logo" src="assets/logo.svg" alt="בדיחה בלחיצה">
   <p class="intro">כותבים נושא, לוחצים, וצוחקים. בלי נושא, מקבלים בדיחה כללית.</p>
@@ -186,6 +303,8 @@
     <p id="text">לוחצים על הכפתור, והבדיחה מופיעה כאן</p>
   </section>
 
+  <p class="byline" id="byline" hidden></p>
+
   <div class="laugh-row" id="laughRow" hidden>
     <button class="laugh" id="laugh" type="button">צחקתי <span id="laughCount">0</span></button>
   </div>
@@ -198,8 +317,10 @@
   <footer>מיישם AI ואוטומציה · 53500</footer>
 </main>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/dist/umd/supabase.js"></script>
+<script src="auth.js"></script>
 <script>
-  const form = document.getElementById('form');
+  const form =document.getElementById('form');
   const topicInput = document.getElementById('topic');
   const go = document.getElementById('go');
   const bubble = document.getElementById('bubble');
@@ -219,6 +340,162 @@
   const topSection = document.getElementById('top');
   const topList = document.getElementById('topList');
   let currentId = null;
+
+  const byline = document.getElementById('byline');
+  const accountBtn = document.getElementById('accountBtn');
+  const authDialog = document.getElementById('authDialog');
+  const accountDialog = document.getElementById('accountDialog');
+  const authMsg = document.getElementById('authMsg');
+  const accMsg = document.getElementById('accMsg');
+  const confirmBox = document.getElementById('confirmBox');
+  let userInfo = null; // { name, email }
+
+  // כל קריאה ל-/api שולחת את הטוקן, אם יש. 401 עם auth_required: מתנתקים לבד.
+  async function api(path, options = {}) {
+    const token = window.Auth && window.Auth.token();
+    const headers = { ...(options.headers || {}) };
+    if (token) headers.Authorization = `Bearer ${token}`;
+    const res = await fetch(path, { ...options, headers });
+    if (token && res.status === 401) {
+      let body = null;
+      try { body = await res.clone().json(); } catch {}
+      if (body && body.code === 'auth_required') {
+        try { await window.Auth.signOut(); } catch {}
+        const err = new Error('צריך להתחבר שוב');
+        err.signedOut = true;
+        throw err;
+      }
+    }
+    return res;
+  }
+
+  function showMsg(el, message, info) {
+    el.textContent = message || '';
+    el.hidden = !message;
+    el.classList.toggle('info', !!info);
+  }
+
+  function renderAccount() {
+    const session = window.Auth && window.Auth.session();
+    if (!session) {
+      userInfo = null;
+      accountBtn.classList.remove('has-user');
+      accountBtn.replaceChildren(document.createTextNode('כניסה'));
+      return;
+    }
+    const meta = session.user.user_metadata || {};
+    const name = (typeof meta.full_name === 'string' && meta.full_name.trim()) || 'חבר/ה';
+    userInfo = { name, email: session.user.email || '' };
+    const avatar = document.createElement('span');
+    avatar.className = 'avatar';
+    avatar.textContent = Array.from(name)[0] || '?';
+    const who = document.createElement('span');
+    who.className = 'who';
+    who.textContent = name;
+    accountBtn.classList.add('has-user');
+    accountBtn.replaceChildren(avatar, who);
+  }
+
+  function setTab(signup) {
+    document.getElementById('tabSignin').setAttribute('aria-selected', String(!signup));
+    document.getElementById('tabSignup').setAttribute('aria-selected', String(signup));
+    document.getElementById('signinForm').hidden = signup;
+    document.getElementById('signupForm').hidden = !signup;
+    showMsg(authMsg, '');
+  }
+
+  function openAuth(signup) {
+    setTab(!!signup);
+    if (!authDialog.open) authDialog.showModal();
+  }
+
+  function openAccount() {
+    document.getElementById('accName').textContent = userInfo.name;
+    document.getElementById('accMail').textContent = userInfo.email;
+    showMsg(accMsg, '');
+    confirmBox.hidden = true;
+    accountDialog.showModal();
+  }
+
+  accountBtn.addEventListener('click', () => (userInfo ? openAccount() : openAuth(false)));
+  document.getElementById('tabSignin').addEventListener('click', () => setTab(false));
+  document.getElementById('tabSignup').addEventListener('click', () => setTab(true));
+
+  for (const dlg of [authDialog, accountDialog]) {
+    dlg.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', () => dlg.close()));
+    dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
+  }
+
+  async function submitAuth(event, action) {
+    event.preventDefault();
+    const submit = event.currentTarget.querySelector('button[type="submit"]');
+    submit.disabled = true;
+    showMsg(authMsg, '');
+    try {
+      await window.Auth.ready();
+      await action();
+      event.currentTarget.reset();
+      authDialog.close();
+    } catch (err) {
+      showMsg(authMsg, err.hebrew ? err.message : 'הכניסה לא זמינה כרגע. נסו שוב מאוחר יותר.');
+    } finally {
+      submit.disabled = false;
+    }
+  }
+
+  document.getElementById('signinForm').addEventListener('submit', (e) =>
+    submitAuth(e, () => window.Auth.signIn(
+      document.getElementById('siEmail').value.trim(),
+      document.getElementById('siPass').value)));
+
+  document.getElementById('signupForm').addEventListener('submit', (e) => {
+    const name = document.getElementById('suName').value.trim();
+    if (!name) {
+      e.preventDefault();
+      showMsg(authMsg, 'איך לקרוא לך? צריך שם');
+      return;
+    }
+    submitAuth(e, () => window.Auth.signUp(
+      name,
+      document.getElementById('suEmail').value.trim(),
+      document.getElementById('suPass').value));
+  });
+
+  document.getElementById('signOutBtn').addEventListener('click', async () => {
+    try { await window.Auth.signOut(); } catch {}
+    accountDialog.close();
+  });
+  document.getElementById('deleteBtn').addEventListener('click', () => { confirmBox.hidden = false; });
+  document.getElementById('cancelDelete').addEventListener('click', () => { confirmBox.hidden = true; });
+  document.getElementById('confirmDelete').addEventListener('click', async (e) => {
+    e.currentTarget.disabled = true;
+    showMsg(accMsg, '');
+    try {
+      const res = await api('/api/delete-account', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok || !data.deleted) throw new Error(data.error || '');
+      try { await window.Auth.signOut(); } catch {}
+      accountDialog.close();
+    } catch (err) {
+      confirmBox.hidden = true;
+      showMsg(accMsg, err.signedOut ? err.message : (/[֐-׿]/.test(err.message) ? err.message : 'לא הצלחתי למחוק את החשבון. נסו שוב.'));
+    } finally {
+      e.currentTarget.disabled = false;
+    }
+  });
+
+  if (window.Auth) {
+    let lastUid = null;
+    window.Auth.onChange((session) => {
+      renderAccount();
+      const uid = session ? session.user.id : null;
+      if (uid !== lastUid) {
+        lastUid = uid;
+        byline.hidden = true;
+      }
+    });
+    window.Auth.ready().then(renderAccount).catch(() => {});
+  }
 
   async function loadTop() {
     try {
@@ -242,7 +519,7 @@
     if (!currentId) return;
     laughBtn.disabled = true;
     try {
-      const res = await fetch('/api/laugh', {
+      const res = await api('/api/laugh', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: currentId }),
@@ -275,9 +552,11 @@
     const topic = topicInput.value.trim();
     currentId = null;
     laughRow.hidden = true;
+    byline.hidden = true;
     setState('think', topic ? `מחפש בדיחה על ${topic}...` : 'מחפש בדיחה...', 'חושב...', true);
     try {
-      const response = await fetch('/api/joke', {
+      try { await window.Auth.ready(); } catch {}
+      const response = await api('/api/joke', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ topic }),
@@ -285,6 +564,10 @@
       const data = await response.json();
       if (!response.ok || !data.joke) throw new Error(data.error || '');
       setState('joke', data.joke, 'עוד בדיחה!', false);
+      if (data.author_name) {
+        byline.textContent = `נכתבה עכשיו בשבילך, ${data.author_name}`;
+        byline.hidden = false;
+      }
       if (data.id) {
         currentId = data.id;
         laughCount.textContent = '0';

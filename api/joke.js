@@ -1,4 +1,5 @@
-import { getSupabase } from '../lib/supabase.js';
+import { getSupabase, hasToken, getUserFromRequest, displayName } from '../lib/supabase.js';
+import { json, authRequired } from '../lib/http.js';
 
 const INSTRUCTIONS =
   'אתה כותב בדיחות קצרות בעברית. כתוב בדיחה אחת בלבד, עד ארבעה משפטים, נקייה ומתאימה לכל גיל. בלי הקדמה, בלי הסבר ובלי אימוג׳י. רק הבדיחה.';
@@ -46,6 +47,19 @@ export default {
       topic = '';
     }
 
+    // משתמש מחובר: מזהים לפני הפנייה ל-OpenAI. טוקן לא מוכר עוצר כאן.
+    let user = null;
+    let canSave = true;
+    if (hasToken(request)) {
+      try {
+        user = await getUserFromRequest(request, getSupabase());
+        if (!user) return authRequired();
+      } catch (authErr) {
+        console.error('Auth check failed, joke will not be saved:', authErr);
+        canSave = false;
+      }
+    }
+
     const apiKey = process.env.OPENAI_API_KEY;
     const model = process.env.OPENAI_MODEL || 'gpt-5';
     console.log(`joke requested, topic: "${topic}", model: ${model}`);
@@ -90,18 +104,26 @@ export default {
         return Response.json({ error: MSG_GENERIC }, { status: 502 });
       }
       let id;
-      try {
-        const { data: row, error } = await getSupabase()
-          .from('jokes')
-          .insert({ topic: topic || null, text: joke })
-          .select('id')
-          .single();
-        if (error) throw error;
-        id = row.id;
-      } catch (saveErr) {
-        console.error('Saving joke failed:', saveErr);
+      const authorName = user ? displayName(user) : null;
+      if (canSave) {
+        try {
+          const { data: row, error } = await getSupabase()
+            .from('jokes')
+            .insert({
+              topic: topic || null,
+              text: joke,
+              user_id: user ? user.id : null,
+              author_name: authorName,
+            })
+            .select('id')
+            .single();
+          if (error) throw error;
+          id = row.id;
+        } catch (saveErr) {
+          console.error('Saving joke failed:', saveErr);
+        }
       }
-      return Response.json(id ? { joke, id } : { joke });
+      return json(id ? { joke, id, author_name: authorName } : { joke, author_name: null });
     } catch (err) {
       console.error('Request to OpenAI failed:', err);
       return Response.json({ error: MSG_GENERIC }, { status: 500 });
