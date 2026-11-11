@@ -40,3 +40,9 @@
 
 ## תנאי השלמה
 כמו ב-`spec/MILESTONES.md`, Milestone 5, שמונה סעיפים.
+
+## סטטוס בנייה
+- ה-migration `add_joke_authors` רץ. `get_advisors`: רק `rls_enabled_no_policy` (מכוון) ו-`unused_index` על `jokes_user_id_idx` (צפוי, יתחיל להיות בשימוש ב-Milestone 6).
+- `SUPABASE_PUBLISHABLE_KEY` נוסף ב-Vercel, מסוג Config, בכל הסביבות.
+- הקוד נדחף ל-main (bd36927). נמצא ותוקן באג: שימוש ב-`event.currentTarget` אחרי `await` בטופסי הכניסה ובמחיקת החשבון (598c026).
+- אומת בהרצה: הרשמה וכניסה עובדות בכתובת Vercel.
